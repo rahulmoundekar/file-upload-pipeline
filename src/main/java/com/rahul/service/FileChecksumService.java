@@ -3,8 +3,10 @@ package com.rahul.service;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 @Service
 public class FileChecksumService {
@@ -12,33 +14,67 @@ public class FileChecksumService {
     public String sha256(MultipartFile file) {
 
         try (InputStream inputStream = file.getInputStream()) {
+            return sha256(inputStream);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "Unable to read file for checksum calculation",
+                    e
+            );
+        }
+    }
 
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    public String sha256(InputStream inputStream) {
+
+        try {
+
+            MessageDigest digest =
+                    MessageDigest.getInstance("SHA-256");
 
             byte[] buffer = new byte[8192];
 
             int bytesRead;
 
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
+            while ((bytesRead =
+                    inputStream.read(buffer)) != -1) {
 
-                digest.update(buffer, 0, bytesRead);
+                digest.update(
+                        buffer,
+                        0,
+                        bytesRead
+                );
             }
 
             return toHex(digest.digest());
 
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException e) {
 
-            throw new IllegalStateException("Unable to calculate file checksum", e);
+            throw new IllegalStateException(
+                    "SHA-256 algorithm is not available",
+                    e
+            );
+
+        } catch (IOException e) {
+
+            throw new IllegalStateException(
+                    "Unable to calculate SHA-256 checksum",
+                    e
+            );
         }
     }
 
     private String toHex(byte[] bytes) {
 
-        StringBuilder result = new StringBuilder(bytes.length * 2);
+        StringBuilder result =
+                new StringBuilder(bytes.length * 2);
 
         for (byte value : bytes) {
 
-            result.append(String.format("%02x", value));
+            result.append(
+                    String.format(
+                            "%02x",
+                            value
+                    )
+            );
         }
 
         return result.toString();

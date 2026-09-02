@@ -1,2 +1,9 @@
 storage:
   bucket: file-uploads-test
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
