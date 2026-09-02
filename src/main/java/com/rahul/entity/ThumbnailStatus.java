@@ -2,9 +2,13 @@ package com.rahul.entity;
 
 public enum ThumbnailStatus {
 
+    NOT_REQUIRED,
+
     PENDING,
+
     PROCESSING,
-    READY,
-    FAILED,
-    NOT_REQUIRED
+
+    COMPLETED,
+
+    FAILED
 }

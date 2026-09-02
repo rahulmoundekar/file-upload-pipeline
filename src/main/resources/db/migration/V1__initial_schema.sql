@@ -19,6 +19,8 @@ CREATE TABLE files (
 
                        failure_reason TEXT,
 
+                       version BIGINT NOT NULL DEFAULT 0,
+
                        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        completed_at TIMESTAMPTZ,

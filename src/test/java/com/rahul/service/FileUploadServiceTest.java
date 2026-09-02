@@ -2,6 +2,7 @@ package com.rahul.service;
 
 import com.rahul.config.UploadProperties;
 import com.rahul.dto.FileUploadResponse;
+import com.rahul.entity.ThumbnailStatus;
 import com.rahul.exception.InvalidFileException;
 import com.rahul.repository.FileMetadataRepository;
 import com.rahul.storage.ObjectKeyGenerator;
@@ -45,6 +46,9 @@ class FileUploadServiceTest {
     @Mock
     private FileValidationService fileValidationService;
 
+    @Mock
+    private ThumbnailPolicy thumbnailPolicy;
+
     @Test
     void uploadShouldStoreObjectAndPersistMetadata() throws IOException {
 
@@ -53,6 +57,9 @@ class FileUploadServiceTest {
         when(uploadProperties.maxFileSizeBytes()).thenReturn(50_000_000L);
 
         when(fileValidationService.validate(file)).thenReturn(new FileValidationResult("hello.txt", "txt", "text/plain", "text/plain"));
+
+        when(thumbnailPolicy.initialStatus("text/plain"))
+                .thenReturn(ThumbnailStatus.NOT_REQUIRED);
 
         when(checksumService.sha256(file)).thenReturn("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" + "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 

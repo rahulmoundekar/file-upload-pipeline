@@ -3,9 +3,22 @@ package com.rahul.entity;
 public enum FileStatus {
 
     UPLOADING,
+
     UPLOADED,
+
     PROCESSING,
+
+    SCANNING,
+
+    CLEAN,
+
+    THUMBNAIL_PROCESSING,
+
     COMPLETED,
-    FAILED,
-    INFECTED
+
+    INFECTED,
+
+    REJECTED,
+
+    FAILED
 }

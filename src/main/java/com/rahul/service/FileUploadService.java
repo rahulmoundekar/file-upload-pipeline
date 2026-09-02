@@ -27,6 +27,7 @@ public class FileUploadService {
     private final FileMetadataRepository fileMetadataRepository;
     private final UploadProperties uploadProperties;
     private final FileValidationService fileValidationService;
+    private final ThumbnailPolicy thumbnailPolicy;
 
     @Transactional
     public FileUploadResponse upload(MultipartFile file) {
@@ -53,6 +54,11 @@ public class FileUploadService {
             String contentType =
                     validation.detectedContentType();
 
+            ThumbnailStatus thumbnailStatus =
+                    thumbnailPolicy.initialStatus(
+                            contentType
+                    );
+
             FileMetadata metadata =
                     new FileMetadata(
                             originalFilename,
@@ -63,7 +69,7 @@ public class FileUploadService {
                             checksum,
                             FileStatus.UPLOADED,
                             ScanStatus.PENDING,
-                            ThumbnailStatus.PENDING
+                            thumbnailStatus
                     );
 
             FileMetadata saved = fileMetadataRepository.save(metadata);
