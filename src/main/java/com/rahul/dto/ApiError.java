@@ -1,0 +1,37 @@
+package com.rahul.dto;
+
+import java.time.Instant;
+import java.util.List;
+
+public record ApiError(
+        Instant timestamp,
+        int status,
+        String code,
+        String message,
+        String path,
+        List<FieldError> errors
+) {
+
+    public record FieldError(
+            String field,
+            String message
+    ) {
+    }
+
+    public ApiError(
+            Instant timestamp,
+            int status,
+            String code,
+            String message,
+            String path
+    ) {
+        this(
+                timestamp,
+                status,
+                code,
+                message,
+                path,
+                List.of()
+        );
+    }
+}

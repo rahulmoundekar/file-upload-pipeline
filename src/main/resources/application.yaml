@@ -15,6 +15,15 @@ spring:
 
   flyway:
     enabled: true
+    locations: classpath:db/migration
+
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:50MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:50MB}
+
+upload:
+  max-file-size-bytes: ${UPLOAD_MAX_FILE_SIZE_BYTES:52428800}
 
 server:
   port: ${SERVER_PORT:8083}
