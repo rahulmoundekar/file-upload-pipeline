@@ -6,6 +6,7 @@ import com.rahul.entity.FileMetadata;
 import com.rahul.entity.FileStatus;
 import com.rahul.entity.ScanStatus;
 import com.rahul.entity.ThumbnailStatus;
+import com.rahul.event.FileUploadedEvent;
 import com.rahul.exception.InvalidFileException;
 import com.rahul.repository.FileMetadataRepository;
 import com.rahul.storage.ObjectKeyGenerator;
@@ -15,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class FileUploadService {
     private final UploadProperties uploadProperties;
     private final FileValidationService fileValidationService;
     private final ThumbnailPolicy thumbnailPolicy;
+    private final OutboxService outboxService;
 
     @Transactional
     public FileUploadResponse upload(MultipartFile file) {
@@ -73,6 +77,25 @@ public class FileUploadService {
                     );
 
             FileMetadata saved = fileMetadataRepository.save(metadata);
+
+            FileUploadedEvent event =
+                    new FileUploadedEvent(
+                            UUID.randomUUID(),
+                            saved.getId(),
+                            saved.getObjectKey(),
+                            saved.getOriginalFilename(),
+                            saved.getContentType(),
+                            saved.getSizeBytes(),
+                            saved.getChecksumSha256(),
+                            Instant.now()
+                    );
+
+            outboxService.create(
+                    "FILE",
+                    saved.getId(),
+                    "FILE_UPLOADED",
+                    event
+            );
 
             return toResponse(saved);
 

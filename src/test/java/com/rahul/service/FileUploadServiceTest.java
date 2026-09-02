@@ -49,6 +49,9 @@ class FileUploadServiceTest {
     @Mock
     private ThumbnailPolicy thumbnailPolicy;
 
+    @Mock
+    private OutboxService outboxService;
+
     @Test
     void uploadShouldStoreObjectAndPersistMetadata() throws IOException {
 

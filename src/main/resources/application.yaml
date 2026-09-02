@@ -22,6 +22,19 @@ spring:
       max-file-size: ${UPLOAD_MAX_FILE_SIZE:50MB}
       max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:50MB}
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+outbox:
+  publisher:
+    enabled: ${OUTBOX_PUBLISHER_ENABLED:false}
+    delay-ms: ${OUTBOX_PUBLISHER_DELAY_MS:1000}
+    scheduler-enabled: ${OUTBOX_PUBLISHER_SCHEDULER_ENABLED:true}
+
+    max-attempts: ${OUTBOX_MAX_ATTEMPTS:5}
+    initial-backoff-ms: ${OUTBOX_INITIAL_BACKOFF_MS:1000}
+    max-backoff-ms: ${OUTBOX_MAX_BACKOFF_MS:60000}
+
 upload:
   max-file-size-bytes: ${UPLOAD_MAX_FILE_SIZE_BYTES:52428800}
 
@@ -52,3 +65,14 @@ storage:
   secret-key: ${STORAGE_SECRET_KEY:minioadmin}
   bucket: ${STORAGE_BUCKET:file-uploads}
   secure: ${STORAGE_SECURE:false}
+
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+  topics:
+    file-uploaded: ${KAFKA_TOPIC_FILE_UPLOADED:file.uploaded}
+    virus-scan: ${KAFKA_TOPIC_VIRUS_SCAN:file.virus-scan}
+    thumbnail: ${KAFKA_TOPIC_THUMBNAIL:file.thumbnail}
+    processing: ${KAFKA_TOPIC_PROCESSING:file.processing}
+    webhook: ${KAFKA_TOPIC_WEBHOOK:file.webhook}
+
