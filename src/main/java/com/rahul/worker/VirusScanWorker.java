@@ -6,6 +6,8 @@ import com.rahul.event.EventDeserializer;
 import com.rahul.event.FileUploadedEvent;
 import com.rahul.event.FileUploadedEventValidator;
 import com.rahul.repository.FileMetadataRepository;
+import com.rahul.service.EventInboxService;
+import com.rahul.service.FileCleanEventService;
 import com.rahul.service.FileStateService;
 import com.rahul.storage.ObjectStorage;
 import com.rahul.virus.ScanResult;
@@ -30,6 +32,8 @@ public class VirusScanWorker {
     private final FileStateService fileStateService;
     private final ObjectStorage objectStorage;
     private final VirusScanService virusScanService;
+    private final EventInboxService eventInboxService;
+    private final FileCleanEventService fileCleanEventService;
 
     @KafkaListener(topics = "${kafka.topics.file-uploaded}", groupId = "${kafka.consumer.virus-scan-group}")
     public void handle(String payload) {
@@ -38,7 +42,14 @@ public class VirusScanWorker {
 
         eventValidator.validate(event);
 
+        if (eventInboxService.alreadyProcessed(event.eventId(), WorkerNames.VIRUS_SCAN)) {
+
+            return;
+        }
+
         process(event);
+
+        eventInboxService.markProcessed(event.eventId(), WorkerNames.VIRUS_SCAN);
     }
 
     private void process(FileUploadedEvent event) {
@@ -67,7 +78,9 @@ public class VirusScanWorker {
 
         if (result.status() == ScanResult.Status.CLEAN) {
 
-            fileStateService.transition(fileId, FileStatus.CLEAN);
+            FileMetadata cleanFile = fileStateService.transition(fileId, FileStatus.CLEAN);
+
+            fileCleanEventService.createEvent(cleanFile);
 
             return;
         }

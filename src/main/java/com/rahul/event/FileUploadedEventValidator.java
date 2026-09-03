@@ -1,5 +1,6 @@
 package com.rahul.event;
 
+import com.rahul.exception.InvalidEventException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -8,7 +9,7 @@ public class FileUploadedEventValidator {
     public void validate(FileUploadedEvent event) {
 
         if (event.eventId() == null) {
-            throw new IllegalArgumentException("eventId must not be null");
+            throw new InvalidEventException("eventId must not be null");
         }
 
         if (event.fileId() == null) {

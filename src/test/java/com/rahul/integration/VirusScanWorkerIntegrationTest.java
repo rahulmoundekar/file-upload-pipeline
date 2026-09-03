@@ -6,8 +6,10 @@ import com.rahul.entity.ScanStatus;
 import com.rahul.entity.ThumbnailStatus;
 import com.rahul.event.FileUploadedEvent;
 import com.rahul.repository.FileMetadataRepository;
+import com.rahul.repository.ProcessedEventRepository;
 import com.rahul.storage.ObjectStorage;
 import com.rahul.worker.VirusScanWorker;
+import com.rahul.worker.WorkerNames;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -57,6 +59,9 @@ class VirusScanWorkerIntegrationTest {
 
     @Container
     static GenericContainer<?> clamav = new GenericContainer<>("clamav/clamav:stable").withExposedPorts(3310);
+
+    @Autowired
+    private ProcessedEventRepository processedEventRepository;
 
     @DynamicPropertySource
     static void registerProperties(DynamicPropertyRegistry registry) {
@@ -289,15 +294,55 @@ class VirusScanWorkerIntegrationTest {
 
             FileMetadata updated = findFile(fileId);
 
-            assertThat(updated.getStatus())
-                    .isEqualTo(FileStatus.REJECTED);
+            assertThat(updated.getStatus()).isEqualTo(FileStatus.REJECTED);
 
-            assertThat(updated.getScanStatus())
-                    .isEqualTo(ScanStatus.INFECTED);
+            assertThat(updated.getScanStatus()).isEqualTo(ScanStatus.INFECTED);
 
-            assertThat(updated.getScanSignature())
-                    .contains("Eicar");
+            assertThat(updated.getScanSignature()).contains("Eicar");
         });
+    }
+
+    @Test
+    void duplicateKafkaEventShouldBeProcessedOnlyOnce() throws Exception {
+
+        UUID fileId = UUID.randomUUID();
+
+        UUID eventId = UUID.randomUUID();
+
+        String objectKey = "uploads/duplicate-test.txt";
+
+        byte[] content = "duplicate event test".getBytes();
+
+        String checksum = sha256(content);
+
+        storeObject(objectKey, content);
+
+        FileMetadata file = saveFile(objectKey, "duplicate-test.txt", "text/plain", content, checksum);
+
+        fileId = file.getId();
+
+        FileUploadedEvent event = new FileUploadedEvent(eventId, fileId, objectKey, "duplicate-test.txt", "text/plain", content.length, checksum, Instant.now());
+
+        String payload = objectMapper.writeValueAsString(event);
+
+        kafkaTemplate.send(FILE_UPLOADED_TOPIC, fileId.toString(), payload).get();
+
+        kafkaTemplate.send(FILE_UPLOADED_TOPIC, fileId.toString(), payload).get();
+
+        UUID finalFileId = fileId;
+
+        await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+
+            FileMetadata updated = findFile(finalFileId);
+
+            assertThat(updated.getStatus()).isEqualTo(FileStatus.CLEAN);
+
+            assertThat(updated.getScanStatus()).isEqualTo(ScanStatus.CLEAN);
+        });
+
+        assertThat(processedEventRepository.findAll().stream().filter(item -> item.getEventId().equals(eventId) && item.getConsumerName().equals(WorkerNames.VIRUS_SCAN)).count()).isEqualTo(1);
+
+        assertThat(processedEventRepository.countByEventIdAndConsumerName(eventId, WorkerNames.VIRUS_SCAN)).isEqualTo(1);
     }
 
     // ============================================================

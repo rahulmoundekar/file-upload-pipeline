@@ -6,6 +6,8 @@ import com.rahul.event.EventDeserializer;
 import com.rahul.event.FileUploadedEvent;
 import com.rahul.event.FileUploadedEventValidator;
 import com.rahul.repository.FileMetadataRepository;
+import com.rahul.service.EventInboxService;
+import com.rahul.service.FileCleanEventService;
 import com.rahul.service.FileStateService;
 import com.rahul.storage.ObjectStorage;
 import com.rahul.virus.ScanResult;
@@ -29,6 +31,8 @@ class VirusScanWorkerTest {
     private FileStateService fileStateService;
     private ObjectStorage objectStorage;
     private VirusScanService virusScanService;
+    private EventInboxService eventInboxService;
+    private FileCleanEventService fileCleanEventService;
 
     private VirusScanWorker worker;
 
@@ -47,7 +51,12 @@ class VirusScanWorkerTest {
 
         virusScanService = mock(VirusScanService.class);
 
-        worker = new VirusScanWorker(eventDeserializer, eventValidator, fileMetadataRepository, fileStateService, objectStorage, virusScanService);
+        eventInboxService = mock(EventInboxService.class);
+
+        fileCleanEventService =
+                mock(FileCleanEventService.class);
+
+        worker = new VirusScanWorker(eventDeserializer, eventValidator, fileMetadataRepository, fileStateService, objectStorage, virusScanService, eventInboxService, fileCleanEventService);
     }
 
     @Test

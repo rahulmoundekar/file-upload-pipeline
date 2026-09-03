@@ -67,16 +67,21 @@ storage:
 # Custom application Kafka configuration
 kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  dlt:
+    suffix: .DLT
 
   producer:
     enabled: ${KAFKA_PRODUCER_ENABLED:false}
 
+
   consumer:
     enabled: ${KAFKA_CONSUMER_ENABLED:false}
     virus-scan-group: ${KAFKA_CONSUMER_VIRUS_SCAN_GROUP:virus-scan-worker}
+    thumbnail-group: ${KAFKA_CONSUMER_THUMBNAIL_GROUP:thumbnail-worker}
 
   topics:
     file-uploaded: ${KAFKA_TOPIC_FILE_UPLOADED:file.uploaded}
+    file-clean: ${KAFKA_TOPIC_FILE_CLEAN:file.clean}
     virus-scan: ${KAFKA_TOPIC_VIRUS_SCAN:file.virus-scan}
     thumbnail: ${KAFKA_TOPIC_THUMBNAIL:file.thumbnail}
     processing: ${KAFKA_TOPIC_PROCESSING:file.processing}
@@ -100,3 +105,9 @@ clamav:
   read-timeout-ms: ${CLAMAV_READ_TIMEOUT_MS:60000}
 
   chunk-size-bytes: ${CLAMAV_CHUNK_SIZE_BYTES:8192}
+
+thumbnail:
+  width: ${THUMBNAIL_WIDTH:300}
+  height: ${THUMBNAIL_HEIGHT:300}
+  format: ${THUMBNAIL_FORMAT:jpg}
+  quality: ${THUMBNAIL_QUALITY:0.85}

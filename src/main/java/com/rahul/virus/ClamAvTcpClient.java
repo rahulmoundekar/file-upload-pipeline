@@ -62,7 +62,13 @@ public class ClamAvTcpClient implements ClamAvClient {
 
         } catch (IOException e) {
 
-            throw new ClamAvException("Unable to scan file with ClamAV", e);
+            throw new ClamAvException(
+                    "Unable to scan file with ClamAV at "
+                            + properties.host()
+                            + ":"
+                            + properties.port(),
+                    e
+            );
         }
     }
 
@@ -70,16 +76,20 @@ public class ClamAvTcpClient implements ClamAvClient {
 
         InputStream input = socket.getInputStream();
 
-        byte[] buffer = new byte[4096];
+        StringBuilder response = new StringBuilder();
 
-        int length = input.read(buffer);
+        int value;
 
-        if (length == -1) {
+        while ((value = input.read()) != -1) {
 
-            throw new IOException("ClamAV closed the connection without a response");
+            if (value == 0) {
+                break;
+            }
+
+            response.append((char) value);
         }
 
-        return new String(buffer, 0, length, StandardCharsets.UTF_8).trim();
+        return response.toString().trim();
     }
 
     private ScanResult parseResponse(String response) {

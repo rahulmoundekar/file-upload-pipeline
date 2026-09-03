@@ -39,13 +39,15 @@ class OutboxPublisherTest {
                 "localhost:9092",
                 new KafkaProperties.Topics(
                         "file.uploaded",
+                        "file.clean",
                         "file.virus-scan",
                         "file.thumbnail",
                         "file.processing",
                         "file.webhook"
                 ),
                 new KafkaProperties.Consumer(
-                        "virus-scan-worker"
+                        "virus-scan-worker",
+                        "thumbnail-worker"
                 )
         );
 

@@ -1,5 +1,6 @@
 package com.rahul.event;
 
+import com.rahul.exception.InvalidEventException;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -16,7 +17,7 @@ class FileUploadedEventValidatorTest {
 
         FileUploadedEvent event = new FileUploadedEvent(null, UUID.randomUUID(), "uploads/test.txt", "test.txt", "text/plain", 10, "a".repeat(64), Instant.now());
 
-        assertThatThrownBy(() -> validator.validate(event)).isInstanceOf(IllegalArgumentException.class).hasMessage("eventId must not be null");
+        assertThatThrownBy(() -> validator.validate(event)).isInstanceOf(InvalidEventException.class).hasMessage("eventId must not be null");
     }
 
     @Test
