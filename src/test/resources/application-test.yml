@@ -25,3 +25,6 @@ kafka:
 outbox:
   publisher:
     enabled: false
+
+webhook:
+  enabled: false

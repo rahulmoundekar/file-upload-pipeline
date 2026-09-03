@@ -40,6 +40,7 @@ class OutboxPublisherTest {
                 new KafkaProperties.Topics(
                         "file.uploaded",
                         "file.clean",
+                        "file.completed",
                         "file.virus-scan",
                         "file.thumbnail",
                         "file.processing",
@@ -47,7 +48,8 @@ class OutboxPublisherTest {
                 ),
                 new KafkaProperties.Consumer(
                         "virus-scan-worker",
-                        "thumbnail-worker"
+                        "thumbnail-worker",
+                        "webhook-group"
                 )
         );
 

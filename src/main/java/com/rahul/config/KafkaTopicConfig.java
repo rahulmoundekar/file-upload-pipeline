@@ -7,11 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
-@ConditionalOnProperty(
-        name = "kafka.producer.enabled",
-        havingValue = "true",
-        matchIfMissing = false
-)
+@ConditionalOnProperty(name = "kafka.producer.enabled", havingValue = "true", matchIfMissing = false)
 public class KafkaTopicConfig {
 
     @Bean
@@ -37,5 +33,10 @@ public class KafkaTopicConfig {
     @Bean
     NewTopic webhookTopic(KafkaProperties properties) {
         return TopicBuilder.name(properties.topics().webhook()).partitions(3).replicas(1).build();
+    }
+
+    @Bean
+    public NewTopic fileCompletedTopic(KafkaProperties kafkaProperties) {
+        return TopicBuilder.name(kafkaProperties.topics().fileCompleted()).partitions(3).replicas(1).build();
     }
 }

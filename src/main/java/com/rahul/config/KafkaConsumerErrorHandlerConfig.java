@@ -1,5 +1,8 @@
 package com.rahul.config;
 
+import com.rahul.exception.FileNotFoundForEventException;
+import com.rahul.exception.InvalidEventException;
+import com.rahul.exception.ObjectKeyMismatchException;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +30,11 @@ public class KafkaConsumerErrorHandlerConfig {
 
         DefaultErrorHandler handler = new DefaultErrorHandler(recoverer, backOff);
 
-        handler.addNotRetryableExceptions(IllegalArgumentException.class);
+        handler.addNotRetryableExceptions(
+                InvalidEventException.class,
+                FileNotFoundForEventException.class,
+                ObjectKeyMismatchException.class
+        );
 
         return handler;
     }

@@ -8,6 +8,9 @@ public final class EventTypes {
     public static final String FILE_CLEAN =
             "FILE_CLEAN";
 
+    public static final String FILE_COMPLETED =
+            "FILE_COMPLETED";
+
     private EventTypes() {
     }
 }

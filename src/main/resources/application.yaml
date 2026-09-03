@@ -78,10 +78,12 @@ kafka:
     enabled: ${KAFKA_CONSUMER_ENABLED:false}
     virus-scan-group: ${KAFKA_CONSUMER_VIRUS_SCAN_GROUP:virus-scan-worker}
     thumbnail-group: ${KAFKA_CONSUMER_THUMBNAIL_GROUP:thumbnail-worker}
+    webhook-group: ${KAFKA_CONSUMER_WEBHOOK_GROUP:webhook-worker}
 
   topics:
     file-uploaded: ${KAFKA_TOPIC_FILE_UPLOADED:file.uploaded}
     file-clean: ${KAFKA_TOPIC_FILE_CLEAN:file.clean}
+    file-completed: ${KAFKA_TOPIC_FILE_COMPLETED:file.completed}
     virus-scan: ${KAFKA_TOPIC_VIRUS_SCAN:file.virus-scan}
     thumbnail: ${KAFKA_TOPIC_THUMBNAIL:file.thumbnail}
     processing: ${KAFKA_TOPIC_PROCESSING:file.processing}
@@ -111,3 +113,10 @@ thumbnail:
   height: ${THUMBNAIL_HEIGHT:300}
   format: ${THUMBNAIL_FORMAT:jpg}
   quality: ${THUMBNAIL_QUALITY:0.85}
+
+webhook:
+  enabled: ${WEBHOOK_ENABLED:false}
+  url: ${WEBHOOK_URL:http://localhost:8089/webhooks/files}
+  secret: ${WEBHOOK_SECRET:change-me}
+  connect-timeout-ms: ${WEBHOOK_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${WEBHOOK_READ_TIMEOUT_MS:10000}

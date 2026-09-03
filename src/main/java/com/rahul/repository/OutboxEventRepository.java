@@ -30,4 +30,9 @@ public interface OutboxEventRepository
             OutboxStatus status,
             Instant now
     );
+
+    boolean existsByAggregateIdAndEventType(
+            UUID aggregateId,
+            String eventType
+    );
 }

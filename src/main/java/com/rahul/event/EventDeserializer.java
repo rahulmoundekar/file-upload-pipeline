@@ -37,4 +37,16 @@ public class EventDeserializer {
             throw new InvalidEventException("Invalid FileCleanEvent payload", e);
         }
     }
+
+    public FileCompletedEvent deserializeFileCompleted(String payload) {
+
+        try {
+
+            return objectMapper.readValue(payload, FileCompletedEvent.class);
+
+        } catch (JacksonException e) {
+
+            throw new InvalidEventException("Invalid FileCompletedEvent payload", e);
+        }
+    }
 }
