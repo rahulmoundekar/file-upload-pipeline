@@ -43,6 +43,10 @@ class KafkaIntegrationTest {
         registry.add("spring.kafka.admin.properties.bootstrap.servers", kafka::getBootstrapServers);
 
         registry.add("outbox.publisher.enabled", () -> false);
+
+        registry.add("kafka.producer.enabled", () -> true);
+        registry.add("kafka.consumer.enabled", () -> false);
+
     }
 
     @Autowired

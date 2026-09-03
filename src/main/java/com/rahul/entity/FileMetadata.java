@@ -64,6 +64,13 @@ public class FileMetadata {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    @Setter
+    @Column(
+            name = "scan_signature",
+            length = 255
+    )
+    private String scanSignature;
+
     @Version
     @Column(
             name = "version",

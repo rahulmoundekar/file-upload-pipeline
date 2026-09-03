@@ -4,9 +4,7 @@ storage:
 spring:
   jpa:
     hibernate:
-      ddl-auto: update
-      jdbc:
-        time_zone: UTC
+      ddl-auto: validate
 
   flyway:
     enabled: true
@@ -19,6 +17,10 @@ spring:
       acks: all
       properties:
         enable.idempotence: true
+
+kafka:
+  consumer:
+    enabled: false
 
 outbox:
   publisher:

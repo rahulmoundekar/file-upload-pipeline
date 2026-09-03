@@ -7,7 +7,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     properties:
       hibernate:
         jdbc:
@@ -22,18 +22,16 @@ spring:
       max-file-size: ${UPLOAD_MAX_FILE_SIZE:50MB}
       max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:50MB}
 
+  # Spring Kafka configuration
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
-outbox:
-  publisher:
-    enabled: ${OUTBOX_PUBLISHER_ENABLED:false}
-    delay-ms: ${OUTBOX_PUBLISHER_DELAY_MS:1000}
-    scheduler-enabled: ${OUTBOX_PUBLISHER_SCHEDULER_ENABLED:true}
-
-    max-attempts: ${OUTBOX_MAX_ATTEMPTS:5}
-    initial-backoff-ms: ${OUTBOX_INITIAL_BACKOFF_MS:1000}
-    max-backoff-ms: ${OUTBOX_MAX_BACKOFF_MS:60000}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
 
 upload:
   max-file-size-bytes: ${UPLOAD_MAX_FILE_SIZE_BYTES:52428800}
@@ -66,8 +64,16 @@ storage:
   bucket: ${STORAGE_BUCKET:file-uploads}
   secure: ${STORAGE_SECURE:false}
 
+# Custom application Kafka configuration
 kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+  producer:
+    enabled: ${KAFKA_PRODUCER_ENABLED:false}
+
+  consumer:
+    enabled: ${KAFKA_CONSUMER_ENABLED:false}
+    virus-scan-group: ${KAFKA_CONSUMER_VIRUS_SCAN_GROUP:virus-scan-worker}
 
   topics:
     file-uploaded: ${KAFKA_TOPIC_FILE_UPLOADED:file.uploaded}
@@ -76,3 +82,21 @@ kafka:
     processing: ${KAFKA_TOPIC_PROCESSING:file.processing}
     webhook: ${KAFKA_TOPIC_WEBHOOK:file.webhook}
 
+outbox:
+  publisher:
+    enabled: ${OUTBOX_PUBLISHER_ENABLED:false}
+    scheduler-enabled: ${OUTBOX_PUBLISHER_SCHEDULER_ENABLED:true}
+    delay-ms: ${OUTBOX_PUBLISHER_DELAY_MS:1000}
+
+    max-attempts: ${OUTBOX_MAX_ATTEMPTS:5}
+    initial-backoff-ms: ${OUTBOX_INITIAL_BACKOFF_MS:1000}
+    max-backoff-ms: ${OUTBOX_MAX_BACKOFF_MS:60000}
+
+clamav:
+  host: ${CLAMAV_HOST:localhost}
+  port: ${CLAMAV_PORT:3310}
+
+  connection-timeout-ms: ${CLAMAV_CONNECTION_TIMEOUT_MS:5000}
+  read-timeout-ms: ${CLAMAV_READ_TIMEOUT_MS:60000}
+
+  chunk-size-bytes: ${CLAMAV_CHUNK_SIZE_BYTES:8192}

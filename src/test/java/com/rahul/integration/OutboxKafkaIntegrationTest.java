@@ -94,6 +94,10 @@ class OutboxKafkaIntegrationTest {
         registry.add("outbox.publisher.enabled", () -> true);
 
         registry.add("outbox.publisher.scheduler-enabled", () -> false);
+
+        registry.add("kafka.producer.enabled", () -> true);
+
+        registry.add("kafka.consumer.enabled", () -> false);
     }
 
     @Autowired

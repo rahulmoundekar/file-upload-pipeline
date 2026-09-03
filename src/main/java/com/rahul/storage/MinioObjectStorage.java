@@ -96,4 +96,28 @@ public class MinioObjectStorage implements ObjectStorage {
 
         return properties.endpoint() + "/" + properties.bucket() + "/" + objectKey;
     }
+
+    @Override
+    public InputStream getObject(String objectKey) {
+        try {
+
+            return minioClient.getObject(GetObjectArgs.builder().bucket(properties.bucket()).object(objectKey).build());
+
+        } catch (Exception e) {
+
+            throw new IllegalStateException("Failed to retrieve object", e);
+        }
+    }
+
+    @Override
+    public void deleteObject(String objectKey) {
+        try {
+
+            minioClient.removeObject(RemoveObjectArgs.builder().bucket(properties.bucket()).object(objectKey).build());
+
+        } catch (Exception e) {
+
+            throw new IllegalStateException("Failed to delete object", e);
+        }
+    }
 }

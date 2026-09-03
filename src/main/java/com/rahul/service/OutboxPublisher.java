@@ -3,6 +3,7 @@ package com.rahul.service;
 import com.rahul.config.KafkaProperties;
 import com.rahul.entity.OutboxEvent;
 import com.rahul.entity.OutboxStatus;
+import com.rahul.event.EventTypes;
 import com.rahul.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -78,7 +79,7 @@ public class OutboxPublisher {
 
         return switch (event.getEventType()) {
 
-            case "FILE_UPLOADED" -> kafkaProperties.topics().fileUploaded();
+            case EventTypes.FILE_UPLOADED -> kafkaProperties.topics().fileUploaded();
 
             default -> throw new IllegalArgumentException("Unsupported event type: " + event.getEventType());
         };

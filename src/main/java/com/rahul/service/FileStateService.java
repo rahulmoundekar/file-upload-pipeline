@@ -49,4 +49,20 @@ public class FileStateService {
 
         return fileMetadataRepository.save(file);
     }
+
+    @Transactional
+    public FileMetadata markInfected(UUID fileId, String signature) {
+
+        FileMetadata file = fileMetadataRepository.findById(fileId).orElseThrow(() -> new IllegalArgumentException("File not found: " + fileId));
+
+        fileStateMachine.validateTransition(file.getStatus(), FileStatus.INFECTED);
+
+        file.changeStatus(FileStatus.INFECTED);
+
+        file.setScanStatus(ScanStatus.INFECTED);
+
+        file.setScanSignature(signature);
+
+        return fileMetadataRepository.save(file);
+    }
 }

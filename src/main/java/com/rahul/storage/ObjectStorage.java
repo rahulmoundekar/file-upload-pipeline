@@ -18,4 +18,12 @@ public interface ObjectStorage {
     boolean exists(String objectKey);
 
     String getObjectUrl(String objectKey);
+
+    InputStream getObject(
+            String objectKey
+    );
+
+    void deleteObject(
+            String objectKey
+    );
 }

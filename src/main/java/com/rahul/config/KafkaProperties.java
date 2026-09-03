@@ -5,7 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "kafka")
 public record KafkaProperties(
         String bootstrapServers,
-        Topics topics
+        Topics topics,
+        Consumer consumer
 ) {
 
     public record Topics(
@@ -14,6 +15,11 @@ public record KafkaProperties(
             String thumbnail,
             String processing,
             String webhook
+    ) {
+    }
+
+    public record Consumer(
+            String virusScanGroup
     ) {
     }
 }

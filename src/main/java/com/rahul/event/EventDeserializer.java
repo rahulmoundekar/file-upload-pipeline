@@ -5,23 +5,23 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 @Component
-public class EventSerializer {
+public class EventDeserializer {
 
     private final ObjectMapper objectMapper;
 
-    public EventSerializer(ObjectMapper objectMapper) {
+    public EventDeserializer(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
-    public String serialize(Object event) {
+    public FileUploadedEvent deserializeFileUploaded(String payload) {
 
         try {
 
-            return objectMapper.writeValueAsString(event);
+            return objectMapper.readValue(payload, FileUploadedEvent.class);
 
         } catch (JacksonException e) {
 
-            throw new IllegalStateException("Unable to serialize event", e);
+            throw new IllegalArgumentException("Invalid FileUploadedEvent payload", e);
         }
     }
 }

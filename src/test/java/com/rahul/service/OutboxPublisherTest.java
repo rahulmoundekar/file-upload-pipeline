@@ -35,7 +35,19 @@ class OutboxPublisherTest {
 
         kafkaTemplate = mock(KafkaTemplate.class);
 
-        kafkaProperties = new KafkaProperties("localhost:9092", new KafkaProperties.Topics("file.uploaded", "file.virus-scan", "file.thumbnail", "file.processing", "file.webhook"));
+        kafkaProperties = new KafkaProperties(
+                "localhost:9092",
+                new KafkaProperties.Topics(
+                        "file.uploaded",
+                        "file.virus-scan",
+                        "file.thumbnail",
+                        "file.processing",
+                        "file.webhook"
+                ),
+                new KafkaProperties.Consumer(
+                        "virus-scan-worker"
+                )
+        );
 
         retryPolicy = new OutboxRetryPolicy(new com.rahul.config.OutboxProperties(5, 1000, 60000));
 
