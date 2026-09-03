@@ -16,7 +16,10 @@ public class ThumbnailWorker {
     private final EventDeserializer eventDeserializer;
     private final ThumbnailProcessingService processingService;
 
-    @KafkaListener(topics = "${kafka.topics.file-clean}", groupId = "${kafka.consumer.thumbnail-group}")
+    @KafkaListener(
+            topics = "${kafka.topics.file-clean}",
+            groupId = "${kafka.consumer.thumbnail-group}"
+    )
     public void handle(String payload) {
 
         FileCleanEvent event = eventDeserializer.deserializeFileClean(payload);

@@ -46,16 +46,16 @@ public class ThumbnailProcessingService {
         FileMetadata file = fileMetadataRepository.findById(event.fileId()).orElseThrow(() -> new IllegalArgumentException("File not found: " + event.fileId()));
 
         if (!file.getObjectKey().equals(event.objectKey())) {
+
             throw new ObjectKeyMismatchException("Object key mismatch for file: " + event.fileId());
         }
 
         /*
-         * A clean file is required before thumbnail processing.
+         * Only CLEAN files can enter thumbnail processing.
          */
         if (file.getStatus() != FileStatus.CLEAN) {
             return;
         }
-        fileCompletionService.complete(file);
 
         /*
          * Non-image files don't need thumbnails.
@@ -67,9 +67,13 @@ public class ThumbnailProcessingService {
             return;
         }
 
+        /*
+         * IMAGE FILE
+         */
         fileStateService.transition(file.getId(), FileStatus.THUMBNAIL_PROCESSING);
 
         try (InputStream inputStream = objectStorage.getObject(event.objectKey())) {
+
             ThumbnailResult result = thumbnailService.generate(inputStream);
 
             String thumbnailKey = ThumbnailObjectKey.from(event.objectKey(), thumbnailProperties.format());
@@ -78,8 +82,13 @@ public class ThumbnailProcessingService {
 
             fileDerivativeService.createThumbnail(file.getId(), thumbnailKey, result.contentType(), result.content().length, result.width(), result.height());
 
+            /*
+             * COMPLETED + FILE_COMPLETED outbox event
+             */
             fileCompletionService.complete(file);
+
         } catch (IOException e) {
+
             throw new RuntimeException(e);
         }
     }
