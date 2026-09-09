@@ -41,7 +41,7 @@ class OutboxPublisherTest {
                         "file.uploaded",
                         "file.clean",
                         "file.completed",
-                        "file.Deleted",
+                        "file-deleted",
                         "file.virus-scan",
                         "file.thumbnail",
                         "file.processing",
@@ -50,7 +50,8 @@ class OutboxPublisherTest {
                 new KafkaProperties.Consumer(
                         "virus-scan-worker",
                         "thumbnail-worker",
-                        "webhook-group"
+                        "webhook-group",
+                        "file-deletion-worker"
                 )
         );
 

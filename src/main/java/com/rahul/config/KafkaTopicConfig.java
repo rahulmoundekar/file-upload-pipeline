@@ -39,4 +39,9 @@ public class KafkaTopicConfig {
     public NewTopic fileCompletedTopic(KafkaProperties kafkaProperties) {
         return TopicBuilder.name(kafkaProperties.topics().fileCompleted()).partitions(3).replicas(1).build();
     }
+
+    @Bean
+    public NewTopic fileDeletedTopic(KafkaProperties kafkaProperties) {
+        return TopicBuilder.name(kafkaProperties.topics().fileDeleted()).partitions(3).replicas(1).build();
+    }
 }

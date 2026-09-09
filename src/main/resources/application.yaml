@@ -79,6 +79,7 @@ kafka:
     virus-scan-group: ${KAFKA_CONSUMER_VIRUS_SCAN_GROUP:virus-scan-worker}
     thumbnail-group: ${KAFKA_CONSUMER_THUMBNAIL_GROUP:thumbnail-worker}
     webhook-group: ${KAFKA_CONSUMER_WEBHOOK_GROUP:webhook-worker}
+    deletion-group: ${KAFKA_CONSUMER_DELETION_GROUP:file-deletion-worker}
 
   topics:
     file-uploaded: ${KAFKA_TOPIC_FILE_UPLOADED:file.uploaded}

@@ -1,5 +1,7 @@
-package com.rahul.event;
+package com.rahul.service;
 
+import com.rahul.event.FileUploadedEvent;
+import com.rahul.event.FileUploadedEventValidator;
 import com.rahul.exception.InvalidEventException;
 import org.junit.jupiter.api.Test;
 

@@ -30,11 +30,15 @@ public class FileStateMachine {
 
         transitions.put(FileStatus.INFECTED, EnumSet.of(FileStatus.REJECTED));
 
-        transitions.put(FileStatus.REJECTED, EnumSet.noneOf(FileStatus.class));
+        transitions.put(FileStatus.REJECTED, EnumSet.of(FileStatus.DELETING));
 
-        transitions.put(FileStatus.COMPLETED, EnumSet.noneOf(FileStatus.class));
+        transitions.put(FileStatus.COMPLETED, EnumSet.of(FileStatus.DELETING));
 
-        transitions.put(FileStatus.FAILED, EnumSet.noneOf(FileStatus.class));
+        transitions.put(FileStatus.FAILED, EnumSet.of(FileStatus.DELETING));
+
+        transitions.put(FileStatus.DELETING, EnumSet.of(FileStatus.DELETED, FileStatus.FAILED));
+
+        transitions.put(FileStatus.DELETED, EnumSet.noneOf(FileStatus.class));
     }
 
     public boolean canTransition(FileStatus current, FileStatus target) {

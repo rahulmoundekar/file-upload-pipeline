@@ -20,7 +20,8 @@ public record KafkaProperties(String bootstrapServers, Topics topics, Consumer c
     public record Consumer(
             String virusScanGroup,
             String thumbnailGroup,
-            String webhookGroup
+            String webhookGroup,
+            String deletionGroup
     ) {
     }
 }

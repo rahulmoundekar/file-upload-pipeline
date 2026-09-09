@@ -1,5 +1,6 @@
 package com.rahul.event;
 
+import com.rahul.exception.InvalidEventException;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -81,7 +82,7 @@ class EventDeserializerTest {
     void shouldRejectInvalidFileDeletedPayload() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                InvalidEventException.class,
                 () -> deserializer.deserializeFileDeleted(
                         "{ invalid-json }"
                 )
