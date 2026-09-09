@@ -84,6 +84,7 @@ kafka:
     file-uploaded: ${KAFKA_TOPIC_FILE_UPLOADED:file.uploaded}
     file-clean: ${KAFKA_TOPIC_FILE_CLEAN:file.clean}
     file-completed: ${KAFKA_TOPIC_FILE_COMPLETED:file.completed}
+    file-deleted: ${KAFKA_TOPIC_FILE_DELETED:file-deleted}
     virus-scan: ${KAFKA_TOPIC_VIRUS_SCAN:file.virus-scan}
     thumbnail: ${KAFKA_TOPIC_THUMBNAIL:file.thumbnail}
     processing: ${KAFKA_TOPIC_PROCESSING:file.processing}

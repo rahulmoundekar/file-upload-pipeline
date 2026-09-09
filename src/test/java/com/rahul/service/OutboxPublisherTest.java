@@ -41,6 +41,7 @@ class OutboxPublisherTest {
                         "file.uploaded",
                         "file.clean",
                         "file.completed",
+                        "file.Deleted",
                         "file.virus-scan",
                         "file.thumbnail",
                         "file.processing",

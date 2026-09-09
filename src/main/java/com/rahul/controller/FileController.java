@@ -1,11 +1,10 @@
 package com.rahul.controller;
 
 import com.rahul.dto.FileIntegrityResponse;
+import com.rahul.dto.FileMetadataResponse;
 import com.rahul.dto.FileUploadResponse;
 import com.rahul.exception.FileDownloadException;
-import com.rahul.service.FileDownloadService;
-import com.rahul.service.FileIntegrityService;
-import com.rahul.service.FileUploadService;
+import com.rahul.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,10 @@ public class FileController {
     private final FileIntegrityService fileIntegrityService;
 
     private final FileDownloadService fileDownloadService;
+
+    private final FileMetadataService fileMetadataService;
+
+    private final FileDeletionService fileDeletionService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload a file", description = """
@@ -75,5 +78,26 @@ public class FileController {
         };
 
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(file.contentType())).contentLength(file.sizeBytes()).header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(file.originalFilename()).build().toString()).body(body);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Get file metadata", description = """
+            Returns metadata and processing status for a file.
+            Internal object-storage details are never exposed.
+            """)
+    public ResponseEntity<FileMetadataResponse> getFile(@PathVariable UUID id) {
+        return ResponseEntity.ok(fileMetadataService.getFile(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a file", description = """
+            Requests asynchronous deletion of a file and
+            its stored derivatives.
+            """)
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+
+        fileDeletionService.requestDeletion(id);
+
+        return ResponseEntity.accepted().build();
     }
 }

@@ -23,6 +23,8 @@ spring:
 kafka:
   consumer:
     enabled: false
+  topics:
+    file-deleted: file-deleted
 
 outbox:
   publisher:

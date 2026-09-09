@@ -1,9 +1,11 @@
 package com.rahul.event;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.rahul.exception.InvalidEventException;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.exc.JsonNodeException;
 
 @Component
 public class EventDeserializer {
@@ -47,6 +49,15 @@ public class EventDeserializer {
         } catch (JacksonException e) {
 
             throw new InvalidEventException("Invalid FileCompletedEvent payload", e);
+        }
+    }
+
+    public FileDeletedEvent deserializeFileDeleted(String payload) {
+
+        try {
+            return objectMapper.readValue(payload, FileDeletedEvent.class);
+        } catch (JsonNodeException exception) {
+            throw new IllegalArgumentException("Unable to deserialize FileDeletedEvent", exception);
         }
     }
 }

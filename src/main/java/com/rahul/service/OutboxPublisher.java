@@ -85,6 +85,8 @@ public class OutboxPublisher {
 
             case EventTypes.FILE_COMPLETED -> kafkaProperties.topics().fileCompleted();
 
+            case EventTypes.FILE_DELETED -> kafkaProperties.topics().fileDeleted();
+
             default -> throw new IllegalArgumentException("Unsupported event type: " + event.getEventType());
         };
     }

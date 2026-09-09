@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 class EventDeserializerTest {
 
@@ -51,5 +52,39 @@ class EventDeserializerTest {
         assertThat(event.checksumSha256()).hasSize(64);
 
         assertThat(event.occurredAt()).isEqualTo(Instant.parse("2026-09-02T10:00:00Z"));
+    }
+
+    @Test
+    void shouldDeserializeFileDeletedEvent() {
+
+        UUID eventId = UUID.randomUUID();
+        UUID fileId = UUID.randomUUID();
+        Instant occurredAt = Instant.parse("2026-09-09T10:15:30Z");
+
+        String payload = """
+                {
+                  "eventId": "%s",
+                  "fileId": "%s",
+                  "occurredAt": "%s"
+                }
+                """.formatted(eventId, fileId, occurredAt);
+
+        FileDeletedEvent event = deserializer.deserializeFileDeleted(payload);
+
+        assertNotNull(event);
+        assertEquals(eventId, event.eventId());
+        assertEquals(fileId, event.fileId());
+        assertEquals(occurredAt, event.occurredAt());
+    }
+
+    @Test
+    void shouldRejectInvalidFileDeletedPayload() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> deserializer.deserializeFileDeleted(
+                        "{ invalid-json }"
+                )
+        );
     }
 }

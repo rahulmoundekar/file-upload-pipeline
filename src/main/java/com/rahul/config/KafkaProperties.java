@@ -9,6 +9,7 @@ public record KafkaProperties(String bootstrapServers, Topics topics, Consumer c
             String fileUploaded,
             String fileClean,
             String fileCompleted,
+            String fileDeleted,
             String virusScan,
             String thumbnail,
             String processing,

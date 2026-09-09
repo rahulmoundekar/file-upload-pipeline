@@ -20,5 +20,8 @@ public enum FileStatus {
 
     REJECTED,
 
-    FAILED
+    FAILED,
+
+    DELETING,
+    DELETED
 }
