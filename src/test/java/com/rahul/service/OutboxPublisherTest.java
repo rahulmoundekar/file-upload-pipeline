@@ -4,6 +4,8 @@ import com.rahul.config.KafkaProperties;
 import com.rahul.entity.OutboxEvent;
 import com.rahul.entity.OutboxStatus;
 import com.rahul.repository.OutboxEventRepository;
+import com.rahul.ops.PipelineMetrics;
+import io.micrometer.core.instrument.Counter;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,8 @@ class OutboxPublisherTest {
     private KafkaTemplate<String, String> kafkaTemplate;
     private KafkaProperties kafkaProperties;
     private OutboxRetryPolicy retryPolicy;
+    private PipelineMetrics metrics;
+    private Counter outboxFailureCounter;
 
     private OutboxPublisher publisher;
 
@@ -41,7 +45,7 @@ class OutboxPublisherTest {
                         "file.uploaded",
                         "file.clean",
                         "file.completed",
-                        "file-deleted",
+                        "file.deleted",
                         "file.virus-scan",
                         "file.thumbnail",
                         "file.processing",
@@ -51,13 +55,16 @@ class OutboxPublisherTest {
                         "virus-scan-worker",
                         "thumbnail-worker",
                         "webhook-group",
-                        "file-deletion-worker"
+                        "deletion-group"
                 )
         );
 
         retryPolicy = new OutboxRetryPolicy(new com.rahul.config.OutboxProperties(5, 1000, 60000));
+        metrics = mock(PipelineMetrics.class);
+        outboxFailureCounter = mock(Counter.class);
+        when(metrics.outboxFailures()).thenReturn(outboxFailureCounter);
 
-        publisher = new OutboxPublisher(outboxEventRepository, kafkaTemplate, kafkaProperties, retryPolicy);
+        publisher = new OutboxPublisher(outboxEventRepository, kafkaTemplate, kafkaProperties, retryPolicy, metrics);
     }
 
     @Test

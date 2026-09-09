@@ -1,7 +1,6 @@
 spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -11,6 +10,10 @@ spring:
 
 kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  consumer:
+    deletion-group: ${KAFKA_CONSUMER_DELETION_GROUP:file-deletion-worker}
+  topics:
+    file-deleted: ${KAFKA_TOPIC_FILE_DELETED:file-deleted}
 
 outbox:
   publisher:

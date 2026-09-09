@@ -5,6 +5,7 @@ import com.rahul.entity.OutboxEvent;
 import com.rahul.entity.OutboxStatus;
 import com.rahul.event.EventTypes;
 import com.rahul.repository.OutboxEventRepository;
+import com.rahul.ops.PipelineMetrics;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -24,11 +25,13 @@ public class OutboxPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final KafkaProperties kafkaProperties;
     private final OutboxRetryPolicy retryPolicy;
+    private final PipelineMetrics metrics;
 
     @Scheduled(fixedDelayString = "${outbox.publisher.delay-ms:1000}")
+    @Transactional
     public void publishPendingEvents() {
 
-        List<OutboxEvent> events = outboxEventRepository.findReadyForPublishing(OutboxStatus.PENDING, Instant.now());
+        List<OutboxEvent> events = outboxEventRepository.findReadyForPublishingForUpdate(OutboxStatus.PENDING.name(), Instant.now());
 
         for (OutboxEvent event : events) {
 
@@ -53,6 +56,7 @@ public class OutboxPublisher {
 
         } catch (Exception exception) {
 
+            metrics.outboxFailures().increment();
             handleFailure(event, exception);
         }
     }

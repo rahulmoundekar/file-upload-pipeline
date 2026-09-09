@@ -11,6 +11,7 @@ import com.rahul.exception.InvalidFileException;
 import com.rahul.repository.FileMetadataRepository;
 import com.rahul.storage.ObjectKeyGenerator;
 import com.rahul.storage.ObjectStorage;
+import com.rahul.ops.PipelineMetrics;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,10 +33,12 @@ public class FileUploadService {
     private final FileValidationService fileValidationService;
     private final ThumbnailPolicy thumbnailPolicy;
     private final OutboxService outboxService;
+    private final PipelineMetrics metrics;
 
     @Transactional
     public FileUploadResponse upload(MultipartFile file) {
 
+        long started = System.nanoTime();
         validateBasicUpload(file);
 
         FileValidationResult validation =
@@ -97,6 +100,8 @@ public class FileUploadService {
                     event
             );
 
+            metrics.uploads().increment();
+            metrics.uploadTimer().record(java.time.Duration.ofNanos(System.nanoTime() - started));
             return toResponse(saved);
 
         } catch (Exception exception) {

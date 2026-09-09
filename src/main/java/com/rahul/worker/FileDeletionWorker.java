@@ -10,6 +10,7 @@ import com.rahul.repository.FileMetadataRepository;
 import com.rahul.service.EventInboxService;
 import com.rahul.service.FileStateService;
 import com.rahul.storage.ObjectStorage;
+import com.rahul.ops.PipelineMetrics;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -28,6 +29,7 @@ public class FileDeletionWorker {
     private final FileStateService fileStateService;
     private final ObjectStorage objectStorage;
     private final EventInboxService eventInboxService;
+    private final PipelineMetrics metrics;
 
     @KafkaListener(topics = "${kafka.topics.file-deleted}", groupId = "${kafka.consumer.deletion-group}")
     public void handle(String payload) {
@@ -68,6 +70,7 @@ public class FileDeletionWorker {
         deleteDerivatives(file.getId());
 
         fileStateService.transition(file.getId(), FileStatus.DELETED);
+        metrics.deletions().increment();
     }
 
     private void deleteOriginal(FileMetadata file) {

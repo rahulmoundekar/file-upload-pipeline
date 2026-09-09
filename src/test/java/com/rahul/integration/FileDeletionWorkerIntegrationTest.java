@@ -46,120 +46,44 @@ import static org.awaitility.Awaitility.await;
 @Testcontainers
 class FileDeletionWorkerIntegrationTest {
     private static final String BUCKET = "file-deletion-test";
-    private static final String FILE_DELETED_TOPIC = "file-deleted";
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17").withDatabaseName("file_upload").withUsername("file_app").withPassword("root");
-    @Container
-    static MinIOContainer minio = new MinIOContainer("minio/minio:latest");
-    @Container
-    static KafkaContainer kafka = new KafkaContainer("apache/kafka:4.0.0");
+    private static final String TOPIC = "file-deleted";
+
+    @Container static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17").withDatabaseName("file_upload").withUsername("file_app").withPassword("root");
+    @Container static MinIOContainer minio = new MinIOContainer("minio/minio:latest");
+    @Container static KafkaContainer kafka = new KafkaContainer("apache/kafka:4.0.0");
 
     @DynamicPropertySource
-    static void registerProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
-        registry.add("spring.flyway.enabled", () -> true);
-        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-        registry.add("kafka.bootstrap-servers", kafka::getBootstrapServers);
-        registry.add("kafka.producer.enabled", () -> true);
-        registry.add("kafka.consumer.enabled", () -> true);
-        registry.add("kafka.consumer.deletion-group", () -> "file-deletion-test-" + UUID.randomUUID());
-        registry.add("kafka.topics.file-deleted", () -> FILE_DELETED_TOPIC);
-        registry.add("storage.endpoint", minio::getS3URL);
-        registry.add("storage.access-key", minio::getUserName);
-        registry.add("storage.secret-key", minio::getPassword);
-        registry.add("storage.bucket", () -> BUCKET);
-        registry.add("storage.secure", () -> false);
-        registry.add("storage.bucket-initializer.enabled", () -> true);
-        registry.add("outbox.publisher.enabled", () -> false);
-        registry.add("webhook.enabled", () -> false);
+    static void props(DynamicPropertyRegistry r) {
+        r.add("spring.datasource.url", postgres::getJdbcUrl); r.add("spring.datasource.username", postgres::getUsername); r.add("spring.datasource.password", postgres::getPassword);
+        r.add("spring.jpa.hibernate.ddl-auto", () -> "update"); r.add("spring.flyway.enabled", () -> true); r.add("spring.flyway.locations", () -> "classpath:db/migration");
+        r.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers); r.add("kafka.bootstrap-servers", kafka::getBootstrapServers);
+        r.add("kafka.producer.enabled", () -> true); r.add("kafka.consumer.enabled", () -> true); r.add("kafka.consumer.deletion-group", () -> "file-deletion-it-" + UUID.randomUUID());
+        r.add("kafka.topics.file-deleted", () -> TOPIC); r.add("storage.endpoint", minio::getS3URL); r.add("storage.access-key", minio::getUserName); r.add("storage.secret-key", minio::getPassword); r.add("storage.bucket", () -> BUCKET); r.add("storage.secure", () -> false); r.add("storage.bucket-initializer.enabled", () -> true); r.add("outbox.publisher.enabled", () -> false); r.add("webhook.enabled", () -> false);
+    }
+    @Autowired KafkaTemplate<String,String> kafkaTemplate;
+    @Autowired ObjectStorage objectStorage;
+    @Autowired FileMetadataRepository files;
+    @Autowired FileDerivativeRepository derivatives;
+    @Autowired ProcessedEventRepository processed;
+    @Autowired ObjectMapper objectMapper;
+    @BeforeEach void topic(){try(AdminClient a=AdminClient.create(Map.of(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG,kafka.getBootstrapServers()))){if(!a.listTopics().names().get().contains(TOPIC))a.createTopics(List.of(new NewTopic(TOPIC,3,(short)1))).all().get();}catch(Exception e){throw new IllegalStateException(e);}}
+
+    @Test void deletionEventShouldDeleteObjectsAndMarkFileDeleted() throws Exception {
+        UUID eventId=UUID.randomUUID(); String original="uploads/it/original.txt", thumb="derivatives/it/thumb.jpg"; byte[] body="delete-me".getBytes(), thumbBody="thumb".getBytes();
+        put(original,body,"text/plain"); put(thumb,thumbBody,"image/jpeg");
+        FileMetadata file=files.saveAndFlush(new FileMetadata("original.txt","original.txt",original,"text/plain",body.length,"a".repeat(64),FileStatus.DELETING,ScanStatus.CLEAN,ThumbnailStatus.COMPLETED)); UUID fileId=file.getId();
+        derivatives.saveAndFlush(new FileDerivative(fileId,DerivativeType.THUMBNAIL,thumb,"image/jpeg",thumbBody.length,300,300));
+        send(new FileDeletedEvent(eventId,fileId,Instant.now()));
+        await().atMost(Duration.ofSeconds(30)).untilAsserted(()->{assertThat(files.findById(fileId).orElseThrow().getStatus()).isEqualTo(FileStatus.DELETED);assertThat(derivatives.findByFileId(fileId)).isEmpty();assertThat(objectStorage.exists(original)).isFalse();assertThat(objectStorage.exists(thumb)).isFalse();});
+        assertThat(processed.countByEventIdAndConsumerName(eventId,WorkerNames.FILE_DELETION)).isEqualTo(1);
     }
 
-    @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
-    @Autowired
-    private ObjectStorage objectStorage;
-    @Autowired
-    private FileMetadataRepository fileMetadataRepository;
-    @Autowired
-    private FileDerivativeRepository fileDerivativeRepository;
-    @Autowired
-    private ProcessedEventRepository processedEventRepository;
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @BeforeEach
-    void setUp() {
-        ensureKafkaTopic();
+    @Test void duplicateDeletionEventShouldBeProcessedOnlyOnce() throws Exception {
+        UUID eventId=UUID.randomUUID(); String key="uploads/it/duplicate.txt"; byte[] body="duplicate".getBytes(); put(key,body,"text/plain");
+        FileMetadata file=files.saveAndFlush(new FileMetadata("duplicate.txt","duplicate.txt",key,"text/plain",body.length,"b".repeat(64),FileStatus.DELETING,ScanStatus.CLEAN,ThumbnailStatus.NOT_REQUIRED)); UUID fileId=file.getId();
+        FileDeletedEvent event=new FileDeletedEvent(eventId,fileId,Instant.now()); String payload=objectMapper.writeValueAsString(event); kafkaTemplate.send(TOPIC,fileId.toString(),payload).get(); kafkaTemplate.send(TOPIC,fileId.toString(),payload).get();
+        await().atMost(Duration.ofSeconds(30)).untilAsserted(()->{assertThat(files.findById(fileId).orElseThrow().getStatus()).isEqualTo(FileStatus.DELETED);assertThat(objectStorage.exists(key)).isFalse();});
+        assertThat(processed.countByEventIdAndConsumerName(eventId,WorkerNames.FILE_DELETION)).isEqualTo(1);
     }
-
-    @Test
-    void deletionEventShouldDeleteObjectsAndMarkFileDeleted() throws Exception {
-        UUID eventId = UUID.randomUUID();
-        String originalObjectKey = "uploads/test-image/original.txt";
-        String thumbnailObjectKey = "derivatives/test-image/thumbnail.jpg";
-        byte[] originalContent = "delete-me".getBytes();
-        byte[] thumbnailContent = "thumbnail".getBytes();
-        storeObject(originalObjectKey, originalContent, "text/plain");
-        storeObject(thumbnailObjectKey, thumbnailContent, "image/jpeg");
-        FileMetadata file = new FileMetadata("original.txt", "original.txt", originalObjectKey, "text/plain", originalContent.length, "a".repeat(64), FileStatus.DELETING, ScanStatus.CLEAN,
-                ThumbnailStatus.COMPLETED);
-        file = fileMetadataRepository.saveAndFlush(file); /* * IMPORTANT: * FileMetadata uses UUID generation, so the real file id * must be read AFTER persistence. */
-        UUID fileId = file.getId();
-        FileDerivative derivative = new FileDerivative(fileId, DerivativeType.THUMBNAIL, thumbnailObjectKey, "image/jpeg", thumbnailContent.length, 300, 300);
-        fileDerivativeRepository.saveAndFlush(derivative);
-        FileDeletedEvent event = new FileDeletedEvent(eventId, fileId, Instant.now());
-        String payload = objectMapper.writeValueAsString(event);
-        kafkaTemplate.send(FILE_DELETED_TOPIC, fileId.toString(), payload).get();
-        await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(250)).untilAsserted(() -> {
-            FileMetadata updated = fileMetadataRepository.findById(fileId).orElseThrow();
-            assertThat(updated.getStatus()).isEqualTo(FileStatus.DELETED);
-            assertThat(fileDerivativeRepository.findByFileId(fileId)).isEmpty();
-            assertThat(objectStorage.exists(originalObjectKey)).isFalse();
-            assertThat(objectStorage.exists(thumbnailObjectKey)).isFalse();
-        });
-        assertThat(processedEventRepository.countByEventIdAndConsumerName(eventId, WorkerNames.FILE_DELETION)).isEqualTo(1);
-    }
-
-    @Test
-    void duplicateDeletionEventShouldBeProcessedOnlyOnce() throws Exception {
-        UUID eventId = UUID.randomUUID();
-        String objectKey = "uploads/duplicate/duplicate.txt";
-        byte[] content = "duplicate-event".getBytes();
-        storeObject(objectKey, content, "text/plain");
-        FileMetadata file = new FileMetadata("duplicate.txt", "duplicate.txt", objectKey, "text/plain", content.length, "b".repeat(64), FileStatus.DELETING, ScanStatus.CLEAN,
-                ThumbnailStatus.NOT_REQUIRED);
-        file = fileMetadataRepository.saveAndFlush(file); /* * Use the persisted entity id in the Kafka event. */
-        UUID fileId = file.getId();
-        FileDeletedEvent event = new FileDeletedEvent(eventId, fileId, Instant.now());
-        String payload = objectMapper.writeValueAsString(event);
-        kafkaTemplate.send(FILE_DELETED_TOPIC, fileId.toString(), payload).get();
-        kafkaTemplate.send(FILE_DELETED_TOPIC, fileId.toString(), payload).get();
-        await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(250)).untilAsserted(() -> {
-            FileMetadata updated = fileMetadataRepository.findById(fileId).orElseThrow();
-            assertThat(updated.getStatus()).isEqualTo(FileStatus.DELETED);
-            assertThat(objectStorage.exists(objectKey)).isFalse();
-        }); /* * Same eventId must only be recorded once for this worker. */
-        assertThat(processedEventRepository.countByEventIdAndConsumerName(eventId, WorkerNames.FILE_DELETION)).isEqualTo(1);
-    }
-
-    private void storeObject(String objectKey, byte[] content, String contentType) throws Exception {
-        objectStorage.put(objectKey, new ByteArrayInputStream(content), content.length, contentType);
-    }
-
-    private void ensureKafkaTopic() {
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
-        try (AdminClient adminClient = AdminClient.create(properties)) {
-            boolean exists = adminClient.listTopics().names().get().contains(FILE_DELETED_TOPIC);
-            if (!exists) {
-                adminClient.createTopics(List.of(new NewTopic(FILE_DELETED_TOPIC, 3, (short) 1))).all().get();
-            }
-        } catch (Exception exception) {
-            throw new IllegalStateException("Unable to create Kafka test topic", exception);
-        }
-    }
+    private void put(String k,byte[] b,String ct)throws Exception{objectStorage.put(k,new ByteArrayInputStream(b),b.length,ct);} private void send(FileDeletedEvent e)throws Exception{kafkaTemplate.send(TOPIC,e.fileId().toString(),objectMapper.writeValueAsString(e)).get();}
 }

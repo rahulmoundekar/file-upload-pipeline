@@ -7,7 +7,9 @@ import com.rahul.exception.InvalidFileException;
 import com.rahul.repository.FileMetadataRepository;
 import com.rahul.storage.ObjectKeyGenerator;
 import com.rahul.storage.ObjectStorage;
+import com.rahul.ops.PipelineMetrics;
 import org.junit.jupiter.api.Test;
+import io.micrometer.core.instrument.Counter;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -52,8 +54,19 @@ class FileUploadServiceTest {
     @Mock
     private OutboxService outboxService;
 
+    @Mock
+    private PipelineMetrics metrics;
+
+    @Mock
+    private Counter uploadCounter;
+
+    @Mock
+    private io.micrometer.core.instrument.Timer uploadTimer;
+
     @Test
     void uploadShouldStoreObjectAndPersistMetadata() throws IOException {
+        when(metrics.uploads()).thenReturn(uploadCounter);
+        when(metrics.uploadTimer()).thenReturn(uploadTimer);
 
         MockMultipartFile file = new MockMultipartFile("file", "hello.txt", "text/plain", "hello".getBytes());
 

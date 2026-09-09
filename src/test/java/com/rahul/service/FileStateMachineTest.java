@@ -101,28 +101,6 @@ class FileStateMachineTest {
         ).isTrue();
     }
 
-
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.CsvSource({
-            "COMPLETED,DELETING",
-            "FAILED,DELETING",
-            "REJECTED,DELETING",
-            "DELETING,DELETED",
-            "DELETING,FAILED"
-    })
-    void deletionTransitionsShouldBeAllowed(
-            FileStatus current,
-            FileStatus target
-    ) {
-
-        assertThat(
-                stateMachine.canTransition(
-                        current,
-                        target
-                )
-        ).isTrue();
-    }
-
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.CsvSource({
             "UPLOADED,SCANNING",

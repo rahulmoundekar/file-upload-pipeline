@@ -2,7 +2,6 @@ storage:
   bucket: file-uploads-test
   bucket-initializer:
     enabled: false
-    deletion-group: file-deletion-worker
 
 spring:
   jpa:
@@ -24,6 +23,7 @@ spring:
 kafka:
   consumer:
     enabled: false
+    deletion-group: file-deletion-test
   topics:
     file-deleted: file-deleted
 

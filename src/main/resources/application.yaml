@@ -122,3 +122,11 @@ webhook:
   secret: ${WEBHOOK_SECRET:change-me}
   connect-timeout-ms: ${WEBHOOK_CONNECT_TIMEOUT_MS:5000}
   read-timeout-ms: ${WEBHOOK_READ_TIMEOUT_MS:10000}
+security:
+  api:
+    enabled: ${SECURITY_API_ENABLED:false}
+    token: ${SECURITY_API_TOKEN:change-me-in-production}
+
+reconciliation:
+  enabled: ${RECONCILIATION_ENABLED:false}
+  delay-ms: ${RECONCILIATION_DELAY_MS:60000}

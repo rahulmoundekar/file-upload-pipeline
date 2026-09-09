@@ -4,6 +4,7 @@ import com.rahul.entity.OutboxEvent;
 import com.rahul.entity.OutboxStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
@@ -30,6 +31,9 @@ public interface OutboxEventRepository
             OutboxStatus status,
             Instant now
     );
+
+    @Query(value = "SELECT * FROM outbox_events WHERE status = :status AND (next_attempt_at IS NULL OR next_attempt_at <= :now) ORDER BY created_at ASC LIMIT 100 FOR UPDATE SKIP LOCKED", nativeQuery = true)
+    List<OutboxEvent> findReadyForPublishingForUpdate(@Param("status") String status, @Param("now") Instant now);
 
     boolean existsByAggregateIdAndEventType(
             UUID aggregateId,
