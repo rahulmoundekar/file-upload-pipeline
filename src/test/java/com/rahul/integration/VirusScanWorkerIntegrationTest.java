@@ -122,6 +122,7 @@ class VirusScanWorkerIntegrationTest {
         registry.add("storage.bucket", () -> "virus-scan-test");
 
         registry.add("storage.secure", () -> false);
+        registry.add("storage.bucket-initializer.enabled", () -> true);
 
         // ---------------------------------------------------------
         // ClamAV

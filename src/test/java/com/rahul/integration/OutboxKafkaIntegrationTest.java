@@ -90,6 +90,7 @@ class OutboxKafkaIntegrationTest {
         registry.add("storage.bucket", () -> "outbox-kafka-test");
 
         registry.add("storage.secure", () -> false);
+        registry.add("storage.bucket-initializer.enabled", () -> true);
 
         registry.add("outbox.publisher.enabled", () -> true);
 

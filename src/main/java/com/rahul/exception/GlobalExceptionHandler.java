@@ -16,113 +16,48 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
 
-        List<ApiError.FieldError> errors =
-                ex.getBindingResult()
-                        .getFieldErrors()
-                        .stream()
-                        .map(error ->
-                                new ApiError.FieldError(
-                                        error.getField(),
-                                        error.getDefaultMessage()
-                                )
-                        )
-                        .toList();
+        List<ApiError.FieldError> errors = ex.getBindingResult().getFieldErrors().stream().map(error -> new ApiError.FieldError(error.getField(), error.getDefaultMessage())).toList();
 
-        ApiError response =
-                new ApiError(
-                        Instant.now(),
-                        HttpStatus.BAD_REQUEST.value(),
-                        "VALIDATION_ERROR",
-                        "Request validation failed",
-                        request.getRequestURI(),
-                        errors
-                );
+        ApiError response = new ApiError(Instant.now(), HttpStatus.BAD_REQUEST.value(), "VALIDATION_ERROR", "Request validation failed", request.getRequestURI(), errors);
 
-        return ResponseEntity
-                .badRequest()
-                .body(response);
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ApiError> handleMaxUploadSize(
-            MaxUploadSizeExceededException ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiError> handleMaxUploadSize(MaxUploadSizeExceededException ex, HttpServletRequest request) {
 
-        return build(
-                HttpStatus.BAD_REQUEST,
-                "FILE_TOO_LARGE",
-                "File exceeds the maximum allowed size",
-                request
-        );
+        return build(HttpStatus.BAD_REQUEST, "FILE_TOO_LARGE", "File exceeds the maximum allowed size", request);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiError> handleIllegalArgument(
-            IllegalArgumentException ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest request) {
 
-        return build(
-                HttpStatus.BAD_REQUEST,
-                "INVALID_REQUEST",
-                ex.getMessage(),
-                request
-        );
+        return build(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", ex.getMessage(), request);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleUnexpected(
-            Exception ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
 
-        return build(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "INTERNAL_SERVER_ERROR",
-                "An unexpected error occurred",
-                request
-        );
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "An unexpected error occurred", request);
     }
 
     @ExceptionHandler(InvalidFileException.class)
-    public ResponseEntity<ApiError> handleInvalidFile(
-            InvalidFileException ex,
-            HttpServletRequest request
-    ) {
+    public ResponseEntity<ApiError> handleInvalidFile(InvalidFileException ex, HttpServletRequest request) {
 
-        return build(
-                HttpStatus.BAD_REQUEST,
-                "INVALID_FILE",
-                ex.getMessage(),
-                request
-        );
+        return build(HttpStatus.BAD_REQUEST, "INVALID_FILE", ex.getMessage(), request);
     }
 
-    private ResponseEntity<ApiError> build(
-            HttpStatus status,
-            String code,
-            String message,
-            HttpServletRequest request
-    ) {
+    @ExceptionHandler(FileNotReadyException.class)
+    public ResponseEntity<ApiError> handleFileNotReady(FileNotReadyException exception, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiError(Instant.now(), HttpStatus.CONFLICT.value(), "FILE_NOT_READY", exception.getMessage(), request.getRequestURI(), List.of()));
+    }
 
-        ApiError error =
-                new ApiError(
-                        Instant.now(),
-                        status.value(),
-                        code,
-                        message,
-                        request.getRequestURI(),
-                        List.of()
-                );
+    private ResponseEntity<ApiError> build(HttpStatus status, String code, String message, HttpServletRequest request) {
 
-        return ResponseEntity
-                .status(status)
-                .body(error);
+        ApiError error = new ApiError(Instant.now(), status.value(), code, message, request.getRequestURI(), List.of());
+
+        return ResponseEntity.status(status).body(error);
     }
 }

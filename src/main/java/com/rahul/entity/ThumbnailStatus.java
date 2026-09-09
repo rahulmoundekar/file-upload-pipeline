@@ -10,5 +10,7 @@ public enum ThumbnailStatus {
 
     COMPLETED,
 
-    FAILED
+    FAILED,
+
+    NOT_APPLICABLE
 }

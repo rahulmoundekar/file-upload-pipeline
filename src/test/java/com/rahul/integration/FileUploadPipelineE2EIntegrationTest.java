@@ -109,6 +109,7 @@ class FileUploadPipelineE2EIntegrationTest {
         registry.add("storage.bucket", () -> BUCKET);
 
         registry.add("storage.secure", () -> false);
+        registry.add("storage.bucket-initializer.enabled", () -> true);
 
         // ClamAV
         registry.add("clamav.host", clamav::getHost);

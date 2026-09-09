@@ -1,5 +1,7 @@
 storage:
   bucket: file-uploads-test
+  bucket-initializer:
+    enabled: false
 
 spring:
   jpa:
