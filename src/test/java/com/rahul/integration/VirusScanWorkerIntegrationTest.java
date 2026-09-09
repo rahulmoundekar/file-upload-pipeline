@@ -157,6 +157,7 @@ class VirusScanWorkerIntegrationTest {
     @BeforeEach
     void cleanDatabase() {
 
+        processedEventRepository.deleteAll();
         fileMetadataRepository.deleteAll();
 
         ensureKafkaTopic();
@@ -332,18 +333,19 @@ class VirusScanWorkerIntegrationTest {
 
         UUID finalFileId = fileId;
 
-        await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+        await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(250)).untilAsserted(() -> {
 
             FileMetadata updated = findFile(finalFileId);
 
             assertThat(updated.getStatus()).isEqualTo(FileStatus.CLEAN);
 
             assertThat(updated.getScanStatus()).isEqualTo(ScanStatus.CLEAN);
+
+            assertThat(processedEventRepository.countByEventIdAndConsumerName(
+                    eventId,
+                    WorkerNames.VIRUS_SCAN
+            )).isEqualTo(1);
         });
-
-        assertThat(processedEventRepository.findAll().stream().filter(item -> item.getEventId().equals(eventId) && item.getConsumerName().equals(WorkerNames.VIRUS_SCAN)).count()).isEqualTo(1);
-
-        assertThat(processedEventRepository.countByEventIdAndConsumerName(eventId, WorkerNames.VIRUS_SCAN)).isEqualTo(1);
     }
 
     // ============================================================
